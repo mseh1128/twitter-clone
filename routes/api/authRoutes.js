@@ -178,6 +178,17 @@ router.post("/search", async (req, res) => {
   }
 });
 
+router.post("/reset", async (req, res) => {
+  try {
+    await Item.remove({});
+    await User.remove({});
+    res.json({ status: "OK" });
+  } catch (err) {
+    console.log(err);
+    res.json({ status: "error", error: err });
+  }
+});
+
 router.get("/logout", (req, res) => {
   req.session.destroy(err => {
     if (err) console.log(err);
