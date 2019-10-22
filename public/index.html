@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <script
+      src="https://code.jquery.com/jquery-3.4.1.js"
+      integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+      crossorigin="anonymous"
+    ></script>
+    <script src="public/assets/index.js"></script>
+  </head>
+  <body>
+    <div>
+      <div>
+        <p>Login</p>
+        Username: <input type="text" name="username" id="loginUsername" /><br />
+        Password: <input type="text" name="password" id="loginPassword" /><br />
+        <input type="submit" value="Submit" id="loginSubmit" /><br /><br />
+        <div id="loginResult"></div>
+      </div>
+      <div>
+        <p>Register (Add User)</p>
+        Username:
+        <input type="text" name="username" id="registerUsername" /><br />
+        Email: <input type="text" name="email" id="registerEmail" /><br />
+        Password:
+        <input type="text" name="password" id="registerPassword" /><br />
+        <input type="submit" value="Submit" id="registerSubmit" /><br /><br />
+        <div id="registerResult"></div>
+      </div>
+
+      <div>
+        <p>Validation</p>
+        Email: <input type="text" name="email" id="validationEmail" /><br />
+        Key: <input type="text" name="key" id="validationKey" /><br />
+        <input type="submit" value="Submit" id="validationSubmit" />
+        <div id="validateResult"></div>
+      </div>
+      <div>
+        <p>Add Item</p>
+        Content: <input type="text" name="content" id="content" /><br />
+        childType: <input type="text" name="childType" id="childType" /><br />
+        <input type="submit" value="Submit" id="addItemSubmit" /><br /><br />
+        <div id="addItemResult"></div>
+      </div>
+      <div>
+        <p>Get Item With Id</p>
+        ID: <input type="text" name="itemID" id="itemID" /><br />
+        <input type="submit" value="Submit" id="getItemSubmit" /><br /><br />
+        <div id="getItemResult"></div>
+      </div>
+      <div>
+        <p>Search Items</p>
+        Timestamp: <input type="text" name="timestamp" id="timestamp" /><br />
+        Limit: <input type="text" name="limit" id="limit" /><br />
+        <input type="submit" value="Submit" id="searchSubmit" /><br /><br />
+        <div id="searchItems"></div>
+      </div>
+      <div>
+        <p>Logout</p>
+        <input type="submit" value="Submit" id="logoutSubmit" />
+        <div id="logoutResult"></div>
+      </div>
+    </div>
+  </body>
+</html>
