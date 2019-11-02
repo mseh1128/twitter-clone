@@ -7,24 +7,27 @@ const { itemToJSON } = require('../../lib/utils');
 
 router.post('/search', async (req, res) => {
   // console.log(req.body);
-  const { timestamp, limit, q, username } = req.body;
+  const { timestamp, q, username } = req.body;
+  let { limit } = req.body;
   let { following } = req.body;
   let unixTimeStamp = timestamp ? timestamp * 1000 : Date.now();
   // console.log(unixTimeStamp);
   if (limit && parseInt(limit) > 100) {
-    res.json({ status: 'error', error: 'Limit is 100!' });
-    return;
+    limit = 100;
+    // res.json({ status: 'error', error: 'Limit is 100!' });
+    // return;
   }
   if (limit && parseInt(limit) < 0) {
-    res.json({
-      status: 'error',
-      error: 'This index is not valid!'
-    });
-    return;
+    limit = 0;
+    // res.json({
+    //   status: 'error',
+    //   error: 'This index is not valid!'
+    // });
+    // return;
   }
   let itemLimit = parseInt(limit) || 25;
   if (parseInt(limit) === 0) itemLimit = 0;
-  // console.log(itemLimit);
+  console.log(itemLimit);
   // Milestone 2 Code Goes Here
   if (following == null) following = true;
   try {
