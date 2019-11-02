@@ -4,6 +4,11 @@ const app = express();
 const mongoose = require('mongoose');
 const config = require('./config');
 const cookieParser = require('cookie-parser');
+const AuthRoutes = require('./routes/api/AuthRoutes');
+const HelperRoutes = require('./routes/api/HelperRoutes');
+const ItemRoutes = require('./routes/api/ItemRoutes');
+const UserRoutes = require('./routes/api/UserRoutes');
+const SearchRoute = require('./routes/api/SearchRoute');
 
 app.use('/public', express.static('public'));
 
@@ -23,7 +28,12 @@ app.use(
 // bottom for form submissions
 app.use(express.urlencoded({ extended: false }));
 
-app.use('/', require('./routes/api/authRoutes'));
+// could put these into a index.js file in routes for modularization!
+app.use('/', AuthRoutes);
+app.use('/', ItemRoutes);
+app.use('/', SearchRoute);
+app.use('/', HelperRoutes);
+app.use('/user', UserRoutes);
 
 app.listen(config.PORT, () => {
   mongoose.connect(config.MONGODB_URI, { useNewUrlParser: true });

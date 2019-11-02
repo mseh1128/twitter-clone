@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
-const ItemSchema = require("./Item").ItemSchema;
+const mongoose = require('mongoose');
+const ItemSchema = require('./Item').ItemSchema;
 
 const UserSchema = new mongoose.Schema({
   username: {
@@ -20,8 +20,10 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  items: [ItemSchema]
+  items: [ItemSchema],
+  followers: [{ type: 'ObjectId' }],
+  following: [{ type: 'ObjectId' }]
 });
 
-const User = mongoose.model("User", UserSchema);
+const User = mongoose.model('User', UserSchema);
 module.exports = User;
