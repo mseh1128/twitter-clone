@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const ItemSchema = new mongoose.Schema(
   {
@@ -34,5 +34,6 @@ const ItemSchema = new mongoose.Schema(
   }
 );
 
-const Item = mongoose.model("Item", ItemSchema);
+ItemSchema.index({ '$**': 'text' }); // include all strings in index
+const Item = mongoose.model('Item', ItemSchema);
 module.exports = { ItemSchema, Item };
