@@ -7,7 +7,7 @@ const Item = require('../../models/Item').Item;
 
 router.post('/search', async (req, res) => {
   // console.log(req.body);
-  const { timestamp, limit } = req.body;
+  const { timestamp, limit, q, username, following } = req.body;
   let unixTimeStamp = timestamp ? timestamp * 1000 : Date.now();
   // console.log(unixTimeStamp);
   if (limit && parseInt(limit) > 100) {
