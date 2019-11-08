@@ -29,6 +29,7 @@ router.post('/search', async (req, res) => {
   if (parseInt(limit) === 0) itemLimit = 0;
   console.log(itemLimit);
   // Milestone 2 Code Goes Here
+  following = JSON.parse(following);
   if (following == null) following = true;
   try {
     const existingUser = await User.findById(req.session.userId).populate(
@@ -78,9 +79,6 @@ const getSearchItems = async (
     inUsername = inUsername.concat(
       followingUsernames.filter(item => inUsername.indexOf(item) < 0)
     );
-  }
-  if (inUsername && inUsername.length > 0) {
-    // array exists & has atleast 1 item in it
     itemOptions['username'] = { $in: inUsername };
   }
   console.log(itemOptions);

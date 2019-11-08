@@ -51,6 +51,8 @@ router.delete('/item/:id', invalidLogin404, async (req, res) => {
       await Item.findById(id)
         .remove()
         .exec();
+      existingUser.items.pull(id);
+      await existingUser.save();
       console.log('User has item');
       res.status(200).send('Item deleted!');
     } else {

@@ -166,7 +166,6 @@ $(async function() {
   $('#deleteItemSubmit').click(async () => {
     const data = await $.ajax({
       type: 'DELETE',
-      dataType: 'Json',
       traditional: true,
       url: `/item/${$('#deleteItemID').val()}`,
       error: (xhr, statusText, err) =>
@@ -179,19 +178,34 @@ $(async function() {
   });
 
   $('#searchSubmit').click(async () => {
+    const timestamp = $('#timestamp').val();
+    const limit = $('#limit').val();
+    const q = $('#searchQuery').val();
+    const username = $('#usernameQuery').val();
+    const following = $('#followingQuery').is(':checked');
+    console.log(`timestamp: ${!timestamp}`);
+    console.log(`Limit: ${!limit}`);
+    console.log(`q: ${!q}`);
+    console.log(`username: ${!username}`);
+    console.log(`following: ${following}`);
+    const postData = {
+      ...(timestamp && { timestamp }),
+      ...(limit && { limit }),
+      ...(q && { q }),
+      ...(username && { username }),
+      ...{ following }
+    };
     const data = await $.ajax({
       type: 'POST',
       dataType: 'Json',
       traditional: true,
-      data: {
-        timestamp: $('#timestamp').val(),
-        limit: $('#limit').val()
-      },
+      data: postData,
       url: '/search'
     });
+
     console.log(data);
     if (data.status === 'error')
-      $('#searchItems').text('There was an error! Check your timestamp/limit!');
+      $('#searchItems').text('There was an error! Check your options again!');
     else
       $('#searchItems').text(
         'The matching items are ' + JSON.stringify(data.items)
