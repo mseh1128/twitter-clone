@@ -113,6 +113,7 @@ router.post('/follow', invalidLogin, async (req, res) => {
       res.json({ status: 'error', error: 'You cannot follow yourself!' });
       return;
     }
+    follow = JSON.parse(follow);
     if (follow == null) follow = true;
     console.log(follow);
     const followingUserAlready = existingUser.following.some(user =>

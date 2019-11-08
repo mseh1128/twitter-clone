@@ -53,11 +53,83 @@
         <div id="getItemResult"></div>
       </div>
       <div>
+        <p>Delete Item With Id</p>
+        ID: <input type="text" name="deleteItemID" id="deleteItemID" /><br />
+        <input type="submit" value="Submit" id="deleteItemSubmit" /><br /><br />
+        <div id="deleteItemResult"></div>
+      </div>
+      <div>
         <p>Search Items</p>
         Timestamp: <input type="text" name="timestamp" id="timestamp" /><br />
         Limit: <input type="text" name="limit" id="limit" /><br />
         <input type="submit" value="Submit" id="searchSubmit" /><br /><br />
         <div id="searchItems"></div>
+      </div>
+      <div>
+        <p>Get User Profile Info</p>
+        Username:
+        <input type="text" name="usernameProfile" id="usernameProfile" /><br />
+        <input
+          type="submit"
+          value="Submit"
+          id="userProfileSubmit"
+        /><br /><br />
+        <div id="userInfo"></div>
+      </div>
+      <div>
+        <p>Get User Posts</p>
+        Username:
+        <input type="text" name="usernamePosts" id="usernamePosts" /><br />
+        Limit: <input type="text" name="postsLimit" id="postsLimit" /><br />
+        <input type="submit" value="Submit" id="userPostsSubmit" /><br /><br />
+        <div id="userPostInfo"></div>
+      </div>
+      <div>
+        <p>Get User Followers</p>
+        Username:
+        <input
+          type="text"
+          name="usernameFollowers"
+          id="usernameFollowers"
+        /><br />
+        Limit:
+        <input type="text" name="followersLimit" id="followersLimit" /><br />
+        <input
+          type="submit"
+          value="Submit"
+          id="userFollowersSubmit"
+        /><br /><br />
+        <div id="userFollowersInfo"></div>
+      </div>
+      <div>
+        <p>Get User Following</p>
+        Username:
+        <input
+          type="text"
+          name="usernameFollowing"
+          id="usernameFollowing"
+        /><br />
+        Limit:
+        <input type="text" name="followingLimit" id="followingLimit" /><br />
+        <input
+          type="submit"
+          value="Submit"
+          id="userFollowingSubmit"
+        /><br /><br />
+        <div id="userFollowingInfo"></div>
+      </div>
+      <div>
+        <p>Follow A User</p>
+        User To Follow:
+        <input type="text" name="userToFollow" id="userToFollow" /><br />
+        <input
+          type="checkbox"
+          value="followOrUnfollow"
+          id="followOrUnfollow"
+          checked
+        />Follow User (Checked = Follow, Unchecked = Unfollow)<br />
+        <input type="submit" value="Submit" id="followUserSubmit" /><br /><br />
+        <div id="followUserInfo"></div>
       </div>
       <div>
         <p>Logout</p>
