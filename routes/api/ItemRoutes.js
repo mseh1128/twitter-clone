@@ -1,18 +1,18 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const {
   itemToJSON,
   invalidLogin,
   invalidLogin404
-} = require('../../lib/utils');
-const User = require('../../models/User');
-const Item = require('../../models/Item').Item;
+} = require("../../lib/utils");
+const User = require("../../models/User");
+const Item = require("../../models/Item").Item;
 
-router.post('/additem', invalidLogin, async (req, res) => {
+router.post("/additem", invalidLogin, async (req, res) => {
   // console.log(req.body);
   const { content, childType } = req.body;
-  if (childType && childType !== 'retweet' && childType !== 'reply')
-    res.json({ status: 'error', error: 'Invalid child type' });
+  if (childType && childType !== "retweet" && childType !== "reply")
+    res.json({ status: "error", error: "Invalid child type" });
   const existingUser = await User.findById(req.session.userId);
   const item = new Item({
     username: existingUser.username,
@@ -24,25 +24,31 @@ router.post('/additem', invalidLogin, async (req, res) => {
     existingUser.items.push(newItem);
     await existingUser.save();
     // console.log(newItem);
-    res.json({ status: 'OK', id: newItem.id });
+    res.json({ status: "OK", id: newItem.id });
   } catch (err) {
-    res.json({ status: 'error', error: err });
+    res.json({ status: "error", error: err });
   }
 });
 
-router.get('/item/:id', async (req, res) => {
+router.post("/addmedia", async (req, res) => {
+  console.log(req.fields);
+  console.log(req.files);
+  res.send("WHATEVER");
+});
+
+router.get("/item/:id", async (req, res) => {
   let id = req.params.id;
   try {
     const item = await Item.findById(id);
     const JSONItem = itemToJSON(item);
-    res.json({ status: 'OK', item: JSONItem });
+    res.json({ status: "OK", item: JSONItem });
   } catch (err) {
     console.log(err);
-    res.json({ status: 'error', error: err });
+    res.json({ status: "error", error: err });
   }
 });
 
-router.delete('/item/:id', invalidLogin404, async (req, res) => {
+router.delete("/item/:id", invalidLogin404, async (req, res) => {
   let id = req.params.id;
   try {
     const existingUser = await User.findById(req.session.userId);
@@ -53,10 +59,10 @@ router.delete('/item/:id', invalidLogin404, async (req, res) => {
         .exec();
       existingUser.items.pull(id);
       await existingUser.save();
-      console.log('User has item');
-      res.status(200).send('Item deleted!');
+      console.log("User has item");
+      res.status(200).send("Item deleted!");
     } else {
-      res.status(404).send('User logged in does not have this item!');
+      res.status(404).send("User logged in does not have this item!");
     }
   } catch (err) {
     res.status(404).send(err);
