@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { itemToJSON, invalidLogin } = require('../../lib/utils');
+const {
+  itemToJSON,
+  invalidLogin,
+  invalidLogin404
+} = require('../../lib/utils');
 const User = require('../../models/User');
 const Item = require('../../models/Item').Item;
 
@@ -38,7 +42,7 @@ router.get('/item/:id', async (req, res) => {
   }
 });
 
-router.delete('/item/:id', invalidLogin, async (req, res) => {
+router.delete('/item/:id', invalidLogin404, async (req, res) => {
   let id = req.params.id;
   try {
     const existingUser = await User.findById(req.session.userId);
@@ -47,6 +51,8 @@ router.delete('/item/:id', invalidLogin, async (req, res) => {
       await Item.findById(id)
         .remove()
         .exec();
+      existingUser.items.pull(id);
+      await existingUser.save();
       console.log('User has item');
       res.status(200).send('Item deleted!');
     } else {

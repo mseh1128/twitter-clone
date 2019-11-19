@@ -1,4 +1,94 @@
 $(async function() {
+  // MILESTONE 2
+  $('#userProfileSubmit').click(async () => {
+    const data = await $.ajax({
+      type: 'GET',
+      dataType: 'Json',
+      traditional: true,
+      url: `/user/${$('#usernameProfile').val()}`
+    });
+    console.log(data);
+    if (data.status === 'error')
+      $('#userInfo').text(JSON.stringify(data.error));
+    else $('#userInfo').text(JSON.stringify(data.user));
+  });
+
+  $('#userPostsSubmit').click(async () => {
+    const data = await $.ajax({
+      type: 'GET',
+      dataType: 'Json',
+      traditional: true,
+      data: {
+        limit: parseInt($('#postsLimit').val())
+      },
+      url: `/user/${$('#usernamePosts').val()}/posts`
+    });
+    console.log(data);
+    if (data.status === 'error')
+      $('#userPostInfo').text(JSON.stringify(data.error));
+    else $('#userPostInfo').text(JSON.stringify(data.items));
+  });
+
+  $('#userFollowersSubmit').click(async () => {
+    const data = await $.ajax({
+      type: 'GET',
+      dataType: 'Json',
+      traditional: true,
+      data: {
+        limit: parseInt($('#followersLimit').val())
+      },
+      url: `/user/${$('#usernameFollowers').val()}/followers`
+    });
+    console.log(data);
+    if (data.status === 'error')
+      $('#userFollowersInfo').text(JSON.stringify(data.error));
+    else $('#userFollowersInfo').text(JSON.stringify(data.users));
+  });
+
+  $('#userFollowingSubmit').click(async () => {
+    const data = await $.ajax({
+      type: 'GET',
+      dataType: 'Json',
+      traditional: true,
+      data: {
+        limit: parseInt($('#followingLimit').val())
+      },
+      url: `/user/${$('#usernameFollowing').val()}/following`
+    });
+    console.log(data);
+    if (data.status === 'error')
+      $('#userFollowingInfo').text(JSON.stringify(data.error));
+    else $('#userFollowingInfo').text(JSON.stringify(data.users));
+  });
+
+  // FOLLOWING
+  $('#followUserSubmit').click(async () => {
+    const isChecked = $('#followOrUnfollow').is(':checked');
+    const data = await $.ajax({
+      type: 'POST',
+      dataType: 'Json',
+      traditional: true,
+      data: {
+        username: $('#userToFollow').val(),
+        follow: isChecked
+      },
+      url: '/follow'
+    });
+    console.log(data);
+    if (data.status === 'error') {
+      $('#followUserInfo').text(data.error);
+    } else {
+      if (isChecked) {
+        $('#followUserInfo').text(`${$('#userToFollow').val()} was followed!`);
+      } else {
+        $('#followUserInfo').text(
+          `${$('#userToFollow').val()} was unfollowed!`
+        );
+      }
+    }
+  });
+
+  /////////
   $('#loginSubmit').click(async () => {
     const data = await $.ajax({
       type: 'POST',
@@ -73,20 +163,49 @@ $(async function() {
     else $('#addItemResult').text('Item Added successfully!');
   });
 
+  $('#deleteItemSubmit').click(async () => {
+    const data = await $.ajax({
+      type: 'DELETE',
+      traditional: true,
+      url: `/item/${$('#deleteItemID').val()}`,
+      error: (xhr, statusText, err) =>
+        $('#deleteItemResult').text(
+          "A 404 request was given back. Looks like something went wrong! Either you are not logged in, the item does not exist, or you are trying to delete someone else's item!"
+        )
+    });
+    console.log(data);
+    $('#deleteItemResult').text('Item Deleted successfully!');
+  });
+
   $('#searchSubmit').click(async () => {
+    const timestamp = $('#timestamp').val();
+    const limit = $('#limit').val();
+    const q = $('#searchQuery').val();
+    const username = $('#usernameQuery').val();
+    const following = $('#followingQuery').is(':checked');
+    console.log(`timestamp: ${!timestamp}`);
+    console.log(`Limit: ${!limit}`);
+    console.log(`q: ${!q}`);
+    console.log(`username: ${!username}`);
+    console.log(`following: ${following}`);
+    const postData = {
+      ...(timestamp && { timestamp }),
+      ...(limit && { limit }),
+      ...(q && { q }),
+      ...(username && { username }),
+      ...{ following }
+    };
     const data = await $.ajax({
       type: 'POST',
       dataType: 'Json',
       traditional: true,
-      data: {
-        timestamp: $('#timestamp').val(),
-        limit: $('#limit').val()
-      },
+      data: postData,
       url: '/search'
     });
+
     console.log(data);
     if (data.status === 'error')
-      $('#searchItems').text('There was an error! Check your timestamp/limit!');
+      $('#searchItems').text('There was an error! Check your options again!');
     else
       $('#searchItems').text(
         'The matching items are ' + JSON.stringify(data.items)

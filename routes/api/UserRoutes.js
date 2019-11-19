@@ -27,17 +27,19 @@ router.get('/:username', async (req, res) => {
 
 router.get('/:username/posts', async (req, res) => {
   const { username } = req.params;
-  const { limit } = req.query;
+  let { limit } = req.query;
   if (limit && parseInt(limit) > 200) {
-    res.json({ status: 'error', error: 'Limit is 200!' });
-    return;
+    limit = 200;
+    // res.json({ status: 'error', error: 'Limit is 200!' });
+    // return;
   }
   if (limit && parseInt(limit) < 0) {
-    res.json({
-      status: 'error',
-      error: 'This index is not valid!'
-    });
-    return;
+    limit = 0;
+    // res.json({
+    //   status: 'error',
+    //   error: 'This index is not valid!'
+    // });
+    // return;
   }
   let itemLimit = parseInt(limit) || 50;
   if (parseInt(limit) === 0) itemLimit = 0;
@@ -60,20 +62,22 @@ router.get('/:username/posts', async (req, res) => {
 });
 router.get('/:username/followers', async (req, res) => {
   const { username } = req.params;
-  const { limit } = req.query;
+  let { limit } = req.query;
   if (limit && parseInt(limit) > 200) {
-    res.json({
-      status: 'error',
-      error: 'Limit is 200!'
-    });
-    return;
+    limit = 200;
+    // res.json({
+    //   status: 'error',
+    //   error: 'Limit is 200!'
+    // });
+    // return;
   }
   if (limit && parseInt(limit) < 0) {
-    res.json({
-      status: 'error',
-      error: 'This index is not valid!'
-    });
-    return;
+    limit = 0;
+    // res.json({
+    //   status: 'error',
+    //   error: 'This index is not valid!'
+    // });
+    // return;
   }
   let itemLimit = parseInt(limit) || 50;
   if (parseInt(limit) === 0) itemLimit = 0; // if user asking for 0 items, don't give them anything?
@@ -106,20 +110,22 @@ router.get('/:username/followers', async (req, res) => {
 
 router.get('/:username/following', async (req, res) => {
   const { username } = req.params;
-  const { limit } = req.query;
+  let { limit } = req.query;
   if (limit && parseInt(limit) > 200) {
-    res.json({
-      status: 'error',
-      error: 'Limit is 200!'
-    });
-    return;
+    limit = 200;
+    // res.json({
+    //   status: 'error',
+    //   error: 'Limit is 200!'
+    // });
+    // return;
   }
   if (limit && parseInt(limit) < 0) {
-    res.json({
-      status: 'error',
-      error: 'This index is not valid!'
-    });
-    return;
+    limit = 0;
+    // res.json({
+    //   status: 'error',
+    //   error: 'This index is not valid!'
+    // });
+    // return;
   }
   let itemLimit = parseInt(limit) || 50;
   if (parseInt(limit) === 0) itemLimit = 0; // if user asking for 0 items, don't give them anything?
