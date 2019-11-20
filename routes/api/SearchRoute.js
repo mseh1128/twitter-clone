@@ -8,8 +8,7 @@ const { itemToJSON } = require('../../lib/utils');
 router.post('/search', async (req, res) => {
   // console.log(req.body);
   const { timestamp, q, username } = req.body;
-  let { limit } = req.body;
-  let { following } = req.body;
+  let { limit, following, rank, hasMedia, replies, parent } = req.body;
   let unixTimeStamp = timestamp ? timestamp * 1000 : Date.now();
   // console.log(unixTimeStamp);
   if (limit && parseInt(limit) > 100) {
@@ -31,6 +30,24 @@ router.post('/search', async (req, res) => {
   // Milestone 2 Code Goes Here
   following = JSON.parse(following);
   if (following == null) following = true;
+  // Milestone 3 Code Goes Here
+  if (!rank) rank = 'interest';
+  if (rank !== 'time' || rank !== 'interest') {
+    console.log('Invalid rank value, setting to default of interest');
+    rank = 'interest';
+  }
+
+  hasMedia = JSON.parse(hasMedia);
+  if (hasMedia == null) hasMedia = false;
+
+  replies = JSON.parse(replies);
+  if (replies == null) replies = true;
+
+  if (!replies) {
+    // Parent = Item ID?
+    parent = null;
+  }
+
   try {
     const existingUser = await User.findById(req.session.userId).populate(
       'following'
@@ -41,7 +58,11 @@ router.post('/search', async (req, res) => {
       q,
       username,
       following,
-      existingUser
+      existingUser,
+      rank,
+      parent,
+      replies,
+      hasMedia
     );
     // console.log(items);
     let JSONItems = items.map(item => itemToJSON(item));
@@ -58,7 +79,11 @@ const getSearchItems = async (
   query,
   username,
   following,
-  loggedInUser
+  loggedInUser,
+  rank,
+  parent,
+  replies,
+  hasMedia
 ) => {
   // console.log(unixTimeStamp);
   // console.log(itemLimit);
@@ -67,6 +92,17 @@ const getSearchItems = async (
   // console.log(loggedInUser);
   // following can be true, false or null
   const itemOptions = { createdAt: { $lte: unixTimeStamp } };
+
+  // Milestone 3 Code
+  if (rank === 'time') {
+    // Sort By Time
+  } else if (rank === 'interest') {
+    // Sort by Likes + Retweets
+  } else {
+    console.log('Invalid rank value!');
+  }
+
+  // Milestone 2 Code
   if (query) itemOptions['$text'] = { $search: query };
   let inUsername = [];
   // if (username) itemOptions['username'] = { username };

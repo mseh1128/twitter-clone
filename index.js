@@ -1,27 +1,31 @@
-const express = require("express");
-const session = require("express-session");
+const express = require('express');
+const session = require('express-session');
+const path = require('path');
 const app = express();
-const mongoose = require("mongoose");
-const config = require("./config");
-const cookieParser = require("cookie-parser");
-const formidableMiddleware = require("express-formidable");
-const AuthRoutes = require("./routes/api/AuthRoutes");
-const HelperRoutes = require("./routes/api/HelperRoutes");
-const ItemRoutes = require("./routes/api/ItemRoutes");
-const UserRoutes = require("./routes/api/UserRoutes");
-const SearchRoute = require("./routes/api/SearchRoute");
+const mongoose = require('mongoose');
+const config = require('./config');
+const cookieParser = require('cookie-parser');
+const crypto = require('crypto');
+const multer = require('multer');
+const GridFsStorage = require('multer-gridfs-storage');
+const Grid = require('gridfs-stream');
+const AuthRoutes = require('./routes/api/AuthRoutes');
+const HelperRoutes = require('./routes/api/HelperRoutes');
+const ItemRoutes = require('./routes/api/ItemRoutes');
+const UserRoutes = require('./routes/api/UserRoutes');
+const SearchRoute = require('./routes/api/SearchRoute');
+const { invalidLogin } = require('./lib/utils');
+const Media = require('./models/Media');
 
-app.use("/public", express.static("public"));
+app.use('/public', express.static('public'));
 
-app.use(express.static(__dirname + "/public"));
-
-app.use(formidableMiddleware());
+app.use(express.static(__dirname + '/public'));
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   session({
-    name: "sid",
+    name: 'sid',
     secret: config.JWT_SECRET,
     cookie: {
       maxAge: 1000 * 60 * 60 * 2 // 2 hours
@@ -31,21 +35,104 @@ app.use(
 // bottom for form submissions
 app.use(express.urlencoded({ extended: false }));
 
+// Create mongo connection
+mongoose.connect(config.MONGODB_URI, { useNewUrlParser: true });
+const conn = mongoose.connection;
+
+let gfs;
+
+conn.on('error', err => console.log(err));
+
+conn.once('open', () => {
+  gfs = Grid(conn.db, mongoose.mongo);
+  gfs.collection('uploads');
+});
+
+app.use((req, res, next) => {
+  res.locals.gfs = gfs;
+  next();
+});
+
 // could put these into a index.js file in routes for modularization!
-app.use("/", AuthRoutes);
-app.use("/", ItemRoutes);
-app.use("/", SearchRoute);
-app.use("/", HelperRoutes);
-app.use("/user", UserRoutes);
+app.use('/', AuthRoutes);
+app.use('/', ItemRoutes);
+app.use('/', SearchRoute);
+app.use('/', HelperRoutes);
+app.use('/user', UserRoutes);
 
-app.listen(config.PORT, () => {
-  mongoose.connect(config.MONGODB_URI, { useNewUrlParser: true });
+const storage = new GridFsStorage({
+  url: config.MONGODB_URI,
+  file: (req, file) => {
+    return new Promise((resolve, reject) => {
+      crypto.randomBytes(16, (err, buf) => {
+        if (err) {
+          return reject(err);
+        }
+        const filename = buf.toString('hex') + path.extname(file.originalname);
+        const fileInfo = {
+          filename: filename,
+          bucketName: 'uploads'
+        };
+        resolve(fileInfo);
+      });
+    });
+  }
 });
 
-const db = mongoose.connection;
+const upload = multer({ storage });
 
-db.on("error", err => console.log(err));
-
-db.once("open", () => {
-  console.log(`Listening on port ${config.PORT}...`);
+// @route POST /upload
+// @desc  Uploads file to DB
+app.post('/addmedia', [invalidLogin, upload.single('content')], (req, res) => {
+  console.log(req.file);
+  if (!req.file) {
+    res.json({ status: 'error', error: 'The file could not be uploaded' });
+  } else {
+    res.json({ status: 'OK', id: req.file.id });
+    const media = new Media({
+      // Grab the file id that was stored in the database by the storage engine as the reference to your file
+      fileID: req.file._id
+    });
+    media.save();
+  }
 });
+
+// @route GET /image/:filename
+// @desc Display Image
+app.get('/media/:id', (req, res) => {
+  let fileId;
+  try {
+    fileId = new mongoose.mongo.ObjectId(req.params.id);
+  } catch (error) {
+    return res.status(404).json({
+      err: 'No file exists'
+    });
+  }
+  fileId = new mongoose.mongo.ObjectId(req.params.id);
+  gfs.files.findOne({ _id: fileId }, (err, file) => {
+    // Check if file
+    if (!file || file.length === 0) {
+      return res.status(404).json({
+        err: 'No file exists'
+      });
+    } else {
+      const readstream = gfs.createReadStream(file.filename);
+      readstream.pipe(res);
+    }
+
+    // Check if image
+    // if (file.contentType === 'image/jpeg' || file.contentType === 'image/png') {
+    //   // Read output to browser
+    //   const readstream = gfs.createReadStream(file.filename);
+    //   readstream.pipe(res);
+    // } else {
+    //   res.status(404).json({
+    //     err: 'Not an image'
+    //   });
+    // }
+  });
+});
+
+const port = config.PORT;
+
+app.listen(port, () => console.log(`Server started on port ${port}`));

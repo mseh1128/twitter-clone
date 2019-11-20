@@ -27,7 +27,14 @@ const ItemSchema = new mongoose.Schema(
       required: false,
       default: null,
       trim: true
-    }
+    },
+    parent: {
+      type: 'ObjectId',
+      required: false,
+      default: null
+    },
+    children: [{ type: 'ObjectId' }],
+    media: [{ type: 'ObjectId' }]
   },
   {
     timestamps: true

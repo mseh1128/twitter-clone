@@ -21,6 +21,8 @@ const UserSchema = new mongoose.Schema({
     default: false
   },
   items: [ItemSchema],
+  likedItems: [{ type: 'ObjectID' }],
+  mediaIDs: [{ type: 'ObjectId' }],
   followers: [{ type: 'ObjectId' }],
   following: [{ type: 'ObjectId' }]
 });
