@@ -4,11 +4,16 @@ const Schema = mongoose.Schema;
 
 const MediaSchema = new Schema({
   usedBy: {
-    type: 'ObjectId'
-  },
-  inUse: {
-    type: Boolean,
-    default: false
+    content: {
+      type: String
+    },
+    childType: {
+      type: String
+    },
+    parent: {
+      type: 'ObjectId'
+    },
+    media: [{ type: String }]
   },
   uploadedBy: {
     type: 'ObjectId'
