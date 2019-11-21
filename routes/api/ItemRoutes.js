@@ -145,67 +145,70 @@ router.delete('/item/:id', invalidLogin404, async (req, res) => {
     const existingUser = await User.findById(req.session.userId);
     const userItems = existingUser.items;
     const { gfs } = res.locals;
-    if (userItems.some(item => item._id.toString() === id)) {
-      console.log('User has the item!');
-      const deletedItem = await Item.findOneAndDelete(id);
-      if (!deletedItem || (deletedItem == null) | (deletedItem == undefined)) {
-        console.log('Deleted item did not exist');
-        return res.status(404).send('Deleted item does not exist');
-      }
-      const mediaIDArray = deletedItem.media;
-      console.log('Media ID Array is: ');
-      // const repliesArray = deletedItem.replies;
-      // const retweetsArray = deletedItem.retweets;
-      // Currently not updated replies/retweets to indicate parent is now null
-      console.log(mediaIDArray);
-
-      if (mediaIDArray && mediaIDArray.length > 0) {
-        mediaIDArray.forEach(async mediaID => {
-          console.log('Inside media array id');
-          if (mediaID) {
-            try {
-              await Media.findByIdAndDelete(mediaID);
-              await gfs.remove({ _id: mediaID, root: 'uploads' });
-            } catch (err) {
-              console.log('In delete error callback, something went wrong');
-              return;
-            }
-          }
-        });
-      }
-
-      // repliesArray.forEach(async replyID => {
-      //     try {
-      //       await Item.findByIdAndDelete(replyID);
-      //     } catch (err) {
-      //       console.log('Could not find media file');
-      //       return;
-      //     }
-      //   }
-      // });
-
-      // retweetsArray.forEach(async retweetID => {
-      //   // findbyid and update
-      //     try {
-      //       await Item.findByIdAndUpdate(mediaID);
-      //     } catch (err) {
-      //       console.log('Could not find media file');
-      //       return;
-      //     }
-      //   }
-      // });
-      console.log('existing user items before');
-      console.log(existingUser.items);
-      existingUser.items.pull(id);
-      console.log('existing user items after');
-      console.log(existingUser.items);
-      existingUser.save();
-      console.log('User had the item');
-      res.status(200).send('Item deleted!');
-    } else {
-      console.log('User does not have the item!');
-      res.status(404).send('User logged in does not have this item!');
+    // if (userItems.some(item => item._id.toString() === id)) {
+    // const deletedItem = await Item.findOneAndDelete(id);
+    const itemToDelete = await Item.findById(id);
+    if (!itemToDelete || itemToDelete == null || itemToDelete == undefined) {
+      console.log('Deleted item did not exist');
+      return res.status(404).send('Deleted item does not exist');
     }
+    if (existingUser.username !== itemToDelete.username) {
+      console.log('User does not have the item!');
+      return res.status(404).send('User logged in does not have this item!');
+    }
+    console.log('Item exists, the user has the item');
+    const mediaIDArray = itemToDelete.media;
+    console.log('Media ID Array is: ');
+    // const repliesArray = itemToDelete.replies;
+    // const retweetsArray = itemToDelete.retweets;
+    // Currently not updated replies/retweets to indicate parent is now null
+    console.log(mediaIDArray);
+
+    if (mediaIDArray && mediaIDArray.length > 0) {
+      mediaIDArray.forEach(async mediaID => {
+        console.log('Inside media array id');
+        if (mediaID) {
+          try {
+            await Media.findByIdAndDelete(mediaID);
+            await gfs.remove({ _id: mediaID, root: 'uploads' });
+          } catch (err) {
+            console.log('In delete error callback, something went wrong');
+            return;
+          }
+        }
+      });
+    }
+
+    // repliesArray.forEach(async replyID => {
+    //     try {
+    //       await Item.findByIdAndDelete(replyID);
+    //     } catch (err) {
+    //       console.log('Could not find media file');
+    //       return;
+    //     }
+    //   }
+    // });
+
+    // retweetsArray.forEach(async retweetID => {
+    //   // findbyid and update
+    //     try {
+    //       await Item.findByIdAndUpdate(mediaID);
+    //     } catch (err) {
+    //       console.log('Could not find media file');
+    //       return;
+    //     }
+    //   }
+    // });
+    await itemToDelete.remove();
+    existingUser.items.pull(id);
+    await existingUser.save();
+    await itemToDelete.save();
+    console.log('User had the item');
+    res.status(200).send('Item deleted!');
+    // } else {
+    //   console.log('User does not have the item!');
+    //   res.status(404).send('User logged in does not have this item!');
+    // }
   } catch (err) {
     res.status(404).send(err);
     console.log(err);
