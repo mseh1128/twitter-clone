@@ -43,7 +43,7 @@ router.post('/adduser', async (req, res) => {
           html: '<p>validation key: <fakeEncryptedKey></p>' // html body
         });
       } catch (err) {
-        // console.log(err);
+        console.log(err);
         res.json({ status: 'error', error: err });
       }
     });

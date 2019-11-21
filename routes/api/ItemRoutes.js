@@ -1,45 +1,62 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 
 const {
   itemToJSON,
   invalidLogin,
-  invalidLogin404
+  invalidLogin404,
+  sanitizeMedia
 } = require('../../lib/utils');
 const User = require('../../models/User');
 const Item = require('../../models/Item').Item;
+const Media = require('../../models/Media');
 
 router.post('/additem', invalidLogin, async (req, res) => {
-  const { content, childType, parent, media } = req.body;
-  if (childType && childType !== 'retweet' && childType !== 'reply')
+  const { content, childType, media } = req.body;
+  let { parent } = req.body;
+  const childIsRetweet = childType === 'retweet';
+  const childIsReply = childType === 'reply';
+  if (childType && !childIsRetweet && !childIsReply) {
     res.json({ status: 'error', error: 'Invalid child type' });
-  if (childType === 'retweet' && parent !== null) {
-    // try finding the parent & incrementing its retweeted field
-    // convert parent to objectID
-    const parentID = new mongoose.mongo.ObjectId(parent);
-    const parentItem = await Item.findById(parentID);
-    if (parentItem) {
-      parentItem.retweeted += 1;
-      await parentItem.save();
-    }
   }
-  // check that the user uploaded the media file!
-  if (media) {
-    // need to add field
-    // gfs.files.findOne({_id: fileId})
+  let parentItem;
+  if (parent) {
+    try {
+      parentItem = await Item.findById(parent);
+    } catch (err) {
+      console.log('Parent doesnt exist');
+      parent = null;
+    }
   }
 
   const existingUser = await User.findById(req.session.userId);
+  const { _id } = existingUser;
+  // check that the user uploaded the media file!
+  console.log(media);
+  const sanitizedMedia = await sanitizeMedia(media, _id);
+
   const item = new Item({
     username: existingUser.username,
     content,
     parent,
-    media
+    media: sanitizedMedia
   });
   try {
     const newItem = await item.save();
     existingUser.items.push(newItem);
     await existingUser.save();
+    if (parentItem && childType) {
+      // if child exists must be retweet or reply
+      if (childIsRetweet) {
+        parentItem.retweeted += 1;
+        parentItem.retweets.push({ _id: newItem._id });
+      } else {
+        // if reply
+        parentItem.replies.push({ _id: newItem._id });
+      }
+      await parentItem.save();
+    }
     // console.log(newItem);
     res.json({ status: 'OK', id: newItem.id });
   } catch (err) {
@@ -60,38 +77,54 @@ router.get('/item/:id', async (req, res) => {
 });
 
 router.post('/item/:id/like', invalidLogin, async (req, res) => {
-  let id = req.params.id;
+  const { id } = req.params;
   let { like } = req.body;
   try {
-    let itemID = new mongoose.mongo.ObjectId(id);
-    const item = await Item.findById(itemID);
+    const item = await Item.findById(id);
     // const existingUser = await User.findById(req.session.userId);
-    like = JSON.parse(like);
-    if (like == null) like = true;
-    const userAlreadyLiked = existingUser.likedItems.includes(itemID);
+    if (like != null) {
+      if (typeof like === 'string' && !(like === 'true' || like === 'false')) {
+        console.log('Invalid string passed');
+        return res.json({ status: 'error' });
+      } else {
+        like = JSON.parse(like); // if only true/false
+      }
+    } else {
+      like = true; // otherwise just ignore it & set it to true
+    }
+
+    const { userId } = req.session;
+    // const existingUser = await User.findById(userId);
+    // console.log(existingUser.likedItems);
+    // const userAlreadyLiked = existingUser.likedItems.includes(id);
+    // console.log(userAlreadyLiked);
+
+    const userAlreadyLiked = item.likedUsers.includes(userId);
+
     if (like) {
+      console.log('Like is true');
       if (!userAlreadyLiked) {
         console.log('Like is true & user has not already liked content');
         // existingUser.likedItems.push(itemID);
-        existingUser.likedItems.push({ _id: itemID });
-        existingUser.save();
-        item.save();
+        // existingUser.likedItems.push({ _id: id });
+        item.likedUsers.push({ _id: userId });
         item.property.likes += 1;
-        res.json({ status: 'OK' });
+        item.save();
       }
+      res.json({ status: 'OK' });
     } else {
-      if (existingUser.likedItems.includes(itemID)) {
+      console.log('Like is false');
+      if (userAlreadyLiked) {
         console.log(
           'Like is false & user has liked content before so can unlike'
         );
         // can only unlike item if originally liked it?
-        // existingUser.likedItems.remove(itemID);
-        doc.subdocs.pull({ _id: 4815162342 });
+        // existingUser.likedItems.remove(id);
+        item.likedUsers.pull({ _id: userId });
         item.property.likes -= 1;
-        existingUser.save();
         item.save();
-        res.json({ status: 'OK' });
       }
+      res.json({ status: 'OK' });
     }
   } catch (err) {
     console.log(err);
@@ -103,22 +136,56 @@ router.delete('/item/:id', invalidLogin404, async (req, res) => {
   let id = req.params.id;
   try {
     const existingUser = await User.findById(req.session.userId);
-    console.log(existingUser.items);
-    if (existingUser.items.some(item => item._id.toString() === id)) {
-      const existingItem = Item.findById(id);
-      const mediaIDArray = existingItem.media;
-      await Item.findById(id)
-        .remove()
-        .exec();
-      mediaIDArray.forEach(mediaID => {
-        gfs.remove({ _id: mediaID, root: 'uploads' }, (err, gridStore) => {
-          if (err) {
-            console.log('COULD NOT FIND THIS MEDIA ID');
+    const userItems = existingUser.items;
+    const { gfs } = res.locals;
+    if (userItems.some(item => item._id.toString() === id)) {
+      const deletedItem = await Item.findOneAndDelete(id);
+      const mediaIDArray = deletedItem.media;
+      // const repliesArray = deletedItem.replies;
+      // const retweetsArray = deletedItem.retweets;
+      // Currently not updated replies/retweets to indicate parent is now null
+      console.log(mediaIDArray);
+
+      mediaIDArray.forEach(async mediaID => {
+        if (mediaID) {
+          try {
+            await Media.findByIdAndDelete(mediaID);
+          } catch (err) {
+            console.log('Could not find media file');
+            return;
           }
-        });
+
+          gfs.remove({ _id: mediaID, root: 'uploads' }, (err, gridStore) => {
+            if (err) {
+              console.log('COULD NOT FIND THIS MEDIA ID');
+            }
+          });
+        }
       });
+
+      // repliesArray.forEach(async replyID => {
+      //     try {
+      //       await Item.findByIdAndDelete(replyID);
+      //     } catch (err) {
+      //       console.log('Could not find media file');
+      //       return;
+      //     }
+      //   }
+      // });
+
+      // retweetsArray.forEach(async retweetID => {
+      //   // findbyid and update
+      //     try {
+      //       await Item.findByIdAndUpdate(mediaID);
+      //     } catch (err) {
+      //       console.log('Could not find media file');
+      //       return;
+      //     }
+      //   }
+      // });
+
       existingUser.items.pull(id);
-      await existingUser.save();
+      existingUser.save();
       console.log('User has item');
       res.status(200).send('Item deleted!');
     } else {

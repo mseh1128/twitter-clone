@@ -33,7 +33,10 @@ const ItemSchema = new mongoose.Schema(
       required: false,
       default: null
     },
-    children: [{ type: 'ObjectId' }],
+    retweets: [{ type: 'ObjectId' }],
+    replies: [{ type: 'ObjectId' }],
+    likedUsers: [{ type: 'ObjectID' }],
+    // children: [{ type: 'ObjectId' }],
     media: [{ type: 'ObjectId' }]
   },
   {

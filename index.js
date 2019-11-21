@@ -14,7 +14,7 @@ const HelperRoutes = require('./routes/api/HelperRoutes');
 const ItemRoutes = require('./routes/api/ItemRoutes');
 const UserRoutes = require('./routes/api/UserRoutes');
 const SearchRoute = require('./routes/api/SearchRoute');
-const { invalidLogin } = require('./lib/utils');
+const { invalidLogin, invalidMediaParams } = require('./lib/utils');
 const Media = require('./models/Media');
 
 app.use('/public', express.static('public'));
@@ -79,7 +79,16 @@ const storage = new GridFsStorage({
   }
 });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage
+  // fileFilter: function(req, file, cb) {
+  //   if (file.fieldname !== 'content') {
+  //     console.log('In here');
+  //     return cb(null, false);
+  //   }
+  //   return cb(null, true);
+  // }
+});
 
 // @route POST /upload
 // @desc  Uploads file to DB
@@ -91,7 +100,7 @@ app.post('/addmedia', [invalidLogin, upload.single('content')], (req, res) => {
     res.json({ status: 'OK', id: req.file.id });
     const media = new Media({
       // Grab the file id that was stored in the database by the storage engine as the reference to your file
-      fileID: req.file._id
+      _id: req.file.id
     });
     media.save();
   }
