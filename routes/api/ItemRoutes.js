@@ -44,6 +44,9 @@ router.post('/additem', invalidLogin, async (req, res) => {
       media: sanitizedMedia
     });
 
+    console.log('THIS ITEM IS: ');
+    console.log(item);
+
     const newItem = await item.save();
     existingUser.items.push(newItem);
     await existingUser.save();
