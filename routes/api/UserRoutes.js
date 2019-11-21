@@ -8,8 +8,7 @@ router.get('/:username', async (req, res) => {
   try {
     const existingUser = await User.findOne({ username });
     if (!existingUser) {
-      res.json({ status: 'error', error: 'That user does not exist!' });
-      return;
+      return res.status(404).json({ status: 'error', error: 'That user does not exist!' });
     }
     const { email, followers, following } = existingUser;
     res.json({

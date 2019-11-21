@@ -16,7 +16,7 @@ router.post('/adduser', async (req, res) => {
   console.log(req.body);
   if (duplicateUser) {
     console.log('DUP USER DETECTED');
-    return res.json({ status: 'error', error: err });
+    return res.status(404).json({ status: 'error', error: "Duplicate user detected!"});
   }
   console.log('Not a duplicate user');
 
@@ -66,14 +66,14 @@ router.post('/verify', async (req, res) => {
   // assume only 1 email
   const existingUser = await User.findOne({ email: email });
   if (!existingUser) {
-    res.json({ status: 'error', error: 'User not found' }); // ie data not found
-    return;
+    console.log("User was not found in verify!");
+    return res.status(404).json({ status: 'error', error: 'User not found' }); // ie data not found
   } // ie data not found
   if (key === 'abracadabra' || key === 'fakeEncryptedKey') {
     existingUser.verified = true;
   } else {
-    res.json({ status: 'error', error: 'Invalid key' });
-    return;
+    console.log("Key was incorrect in verify!");
+    return res.status(404).json({ status: 'error', error: 'Invalid key' });
   }
   await existingUser.save();
   res.json({ status: 'OK' });
