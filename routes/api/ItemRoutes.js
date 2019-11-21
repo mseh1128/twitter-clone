@@ -143,58 +143,63 @@ router.delete('/item/:id', invalidLogin404, async (req, res) => {
   let id = req.params.id;
   try {
     const existingUser = await User.findById(req.session.userId);
-    const userItems = existingUser.items;
+    // const userItems = existingUser.items;
     const { gfs } = res.locals;
-    if (userItems.some(item => item._id.toString() === id)) {
-      const deletedItem = await Item.findOneAndDelete(id);
-      const mediaIDArray = deletedItem.media;
-      console.log('IN HERE');
-      // const repliesArray = deletedItem.replies;
-      // const retweetsArray = deletedItem.retweets;
-      // Currently not updated replies/retweets to indicate parent is now null
-      console.log(mediaIDArray);
+    // if (userItems.some(item => item._id.toString() === id)) {
+    const deletedItem = await Item.findOneAndDelete(id);
+    if (!deletedItem || (deletedItem == null) | (deletedItem == undefined)) {
+      return res.status(404).send('Deleted item does not exist');
+    }
+    const mediaIDArray = deletedItem.media;
+    console.log('Media ID Array is: ');
+    // const repliesArray = deletedItem.replies;
+    // const retweetsArray = deletedItem.retweets;
+    // Currently not updated replies/retweets to indicate parent is now null
+    console.log(mediaIDArray);
 
+    if (mediaIDArray && mediaIDArray.length > 0) {
       mediaIDArray.forEach(async mediaID => {
+        console.log('Inside media array id');
         if (mediaID) {
           try {
             await Media.findByIdAndDelete(mediaID);
             await gfs.remove({ _id: mediaID, root: 'uploads' });
           } catch (err) {
-            console.log('Could not find media file');
-            console.log('In delete error callback');
+            console.log('In delete error callback, something went wrong');
             return;
           }
         }
       });
-
-      // repliesArray.forEach(async replyID => {
-      //     try {
-      //       await Item.findByIdAndDelete(replyID);
-      //     } catch (err) {
-      //       console.log('Could not find media file');
-      //       return;
-      //     }
-      //   }
-      // });
-
-      // retweetsArray.forEach(async retweetID => {
-      //   // findbyid and update
-      //     try {
-      //       await Item.findByIdAndUpdate(mediaID);
-      //     } catch (err) {
-      //       console.log('Could not find media file');
-      //       return;
-      //     }
-      //   }
-      // });
-
-      existingUser.items.pull(id);
-      existingUser.save();
-      console.log('User has item');
-      res.status(200).send('Item deleted!');
-    } else {
-      res.status(404).send('User logged in does not have this item!');
     }
+
+    // repliesArray.forEach(async replyID => {
+    //     try {
+    //       await Item.findByIdAndDelete(replyID);
+    //     } catch (err) {
+    //       console.log('Could not find media file');
+    //       return;
+    //     }
+    //   }
+    // });
+
+    // retweetsArray.forEach(async retweetID => {
+    //   // findbyid and update
+    //     try {
+    //       await Item.findByIdAndUpdate(mediaID);
+    //     } catch (err) {
+    //       console.log('Could not find media file');
+    //       return;
+    //     }
+    //   }
+    // });
+
+    existingUser.items.pull(id);
+    existingUser.save();
+    console.log('User had the item');
+    res.status(200).send('Item deleted!');
+    // } else {
+    //   res.status(404).send('User logged in does not have this item!');
+    // }
   } catch (err) {
     res.status(404).send(err);
     console.log(err);
