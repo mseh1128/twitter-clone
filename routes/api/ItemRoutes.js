@@ -39,10 +39,11 @@ router.post('/additem', invalidLogin, async (req, res) => {
     // console.log(req.body);
     const sanitizedMedia = await sanitizeMedia(media, _id, req.body);
 
-    let item = new Item({
+    const item = new Item({
       username: existingUser.username,
       content,
       parent,
+      childType,
       media: sanitizedMedia
     });
 

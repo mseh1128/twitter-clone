@@ -167,7 +167,12 @@ const getSearchItems = async (
   }
   console.log(itemOptions);
   // if (username) itemOptions['username'] = username;
+  if (!replies) {
+    itemOptions['childType'] = { $ne: 'reply' };
+  }
+
   if (parent != null) {
+    console.log('PARENT IS NOT NULL');
     // parent & replies must be true to reach here
     // include replies & retweets
     try {
