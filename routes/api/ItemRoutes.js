@@ -168,7 +168,9 @@ router.delete('/item/:id', invalidLogin404, async (req, res) => {
       mediaIDArray.forEach(async mediaID => {
         console.log('Inside media array id');
         if (mediaID) {
+          console.log('media array exists');
           try {
+            console.log('deleting media');
             await Media.findByIdAndDelete(mediaID);
             await gfs.remove({ _id: mediaID, root: 'uploads' });
           } catch (err) {

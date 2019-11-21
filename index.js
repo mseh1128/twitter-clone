@@ -110,7 +110,7 @@ app.post('/addmedia', [invalidLogin, upload.single('content')], (req, res) => {
 
 // @route GET /image/:filename
 // @desc Display Image
-app.get('/media/:id', (req, res) => {
+app.get('/media/:id', async (req, res) => {
   let fileId;
   try {
     fileId = new mongoose.mongo.ObjectId(req.params.id);
@@ -120,7 +120,9 @@ app.get('/media/:id', (req, res) => {
     });
   }
 
-  if (!Media.exists({ _id: fileId })) {
+  const mediaExists = !(await Media.exists({ _id: fileId }));
+  console.log(mediaExists);
+  if (mediaExists) {
     console.log('The media file did not exist!');
     return res.status(404).json({
       err: 'The media file did not exist!'
