@@ -72,6 +72,8 @@ router.get('/item/:id', async (req, res) => {
   let id = req.params.id;
   try {
     const item = await Item.findById(id);
+    if (!item || item == null || item == undefined)
+      return res.json({ status: 'error', error: 'Item does not exist' });
     const JSONItem = itemToJSON(item);
     res.json({ status: 'OK', item: JSONItem });
   } catch (err) {

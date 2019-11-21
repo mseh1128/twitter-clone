@@ -111,7 +111,6 @@ app.post('/addmedia', [invalidLogin, upload.single('content')], (req, res) => {
 // @route GET /image/:filename
 // @desc Display Image
 app.get('/media/:id', (req, res) => {
-  console.log('IN GET');
   let fileId;
   try {
     fileId = new mongoose.mongo.ObjectId(req.params.id);
