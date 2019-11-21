@@ -134,20 +134,17 @@ app.get('/media/:id', (req, res) => {
         err: 'No file exists'
       });
     } else {
-      const readstream = gfs.createReadStream(file.filename);
-      readstream.pipe(res);
+      try {
+        const readstream = gfs.createReadStream(file.filename);
+        readstream.pipe(res);
+      } catch (err) {
+        console.log(err);
+        console.log('The media file probably doesnt exist at this point');
+        return res.status(404).json({
+          err: 'The media file did not exist!'
+        });
+      }
     }
-
-    // Check if image
-    // if (file.contentType === 'image/jpeg' || file.contentType === 'image/png') {
-    //   // Read output to browser
-    //   const readstream = gfs.createReadStream(file.filename);
-    //   readstream.pipe(res);
-    // } else {
-    //   res.status(404).json({
-    //     err: 'Not an image'
-    //   });
-    // }
   });
 });
 

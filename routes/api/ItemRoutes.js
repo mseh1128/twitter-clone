@@ -159,12 +159,17 @@ router.delete('/item/:id', invalidLogin404, async (req, res) => {
             console.log('Could not find media file');
             return;
           }
-
-          gfs.remove({ _id: mediaID, root: 'uploads' }, (err, gridStore) => {
-            if (err) {
-              console.log('COULD NOT FIND THIS MEDIA ID');
-            }
-          });
+          try {
+            gfs.remove({ _id: mediaID, root: 'uploads' }, (err, gridStore) => {
+              if (err) {
+                console.log('COULD NOT FIND THIS MEDIA ID');
+              }
+            });
+          } catch (err) {
+            console.log(err);
+            console.log('In delete error callback');
+            return;
+          }
         }
       });
 

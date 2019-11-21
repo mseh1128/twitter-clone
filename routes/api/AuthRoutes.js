@@ -81,7 +81,11 @@ router.post('/login', async (req, res) => {
     req.session.userId = user._id;
     res.json({ status: 'OK' });
   } catch (err) {
-    res.json({ status: 'error', error: err });
+    res.status(404).json({
+      status: 'error',
+      error: err
+    });
+    // res.json({ status: 'error', error: err });
     console.log(err);
   }
 });
