@@ -13,6 +13,7 @@ router.post('/reset', async (req, res) => {
     await Item.remove({});
     await User.remove({});
     await Media.remove({});
+    res.locals.gfs.remove({});
     res.json({ status: 'OK' });
   } catch (err) {
     console.log(err);
