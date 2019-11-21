@@ -144,7 +144,6 @@ router.delete('/item/:id', invalidLogin404, async (req, res) => {
     const userItems = existingUser.items;
     const { gfs } = res.locals;
     if (userItems.some(item => item._id.toString() === id)) {
-      console.log('deleted item exists!');
       const deletedItem = await Item.findOneAndDelete(id);
       const mediaIDArray = deletedItem.media;
       console.log('IN HERE');
@@ -161,9 +160,7 @@ router.delete('/item/:id', invalidLogin404, async (req, res) => {
           } catch (err) {
             console.log('Could not find media file');
             console.log('In delete error callback');
-            res
-              .status(404)
-              .send('User logged in does not have this media file!');
+            return;
           }
         }
       });
