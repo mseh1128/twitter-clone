@@ -28,23 +28,72 @@ router.post('/search', async (req, res) => {
   if (parseInt(limit) === 0) itemLimit = 0;
   console.log(itemLimit);
   // Milestone 2 Code Goes Here
-  following = JSON.parse(following);
-  if (following == null) following = true;
-  // Milestone 3 Code Goes Here
-  if (!rank) rank = 'interest';
-  if (rank !== 'time' || rank !== 'interest') {
-    console.log('Invalid rank value, setting to default of interest');
-    rank = 'interest';
+  // following = JSON.parse(following);
+  // if (following == null) following = true;
+  if (following != null) {
+    if (
+      typeof following === 'string' &&
+      !(following === 'true' || following === 'false')
+    ) {
+      return res.json({
+        status: 'error',
+        error: 'Invalid following value, throwing error'
+      });
+    } else {
+      following = JSON.parse(following); // if only true/false
+    }
+  } else {
+    following = true; // otherwise just ignore it & set it to true
   }
 
-  hasMedia = JSON.parse(hasMedia);
-  if (hasMedia == null) hasMedia = false;
+  // Milestone 3 Code Goes Here
+  if (rank == null) rank = 'interest';
+  if (!(rank === 'time' || rank === 'interest')) {
+    console.log('Invalid rank value, throwing error');
+    return res.json({
+      status: 'error',
+      error: 'Invalid rank value, throwing error'
+    });
+  }
 
-  replies = JSON.parse(replies);
-  if (replies == null) replies = true;
+  // hasMedia = JSON.parse(hasMedia);
+  // if (hasMedia == null) hasMedia = false;
+  if (hasMedia != null) {
+    if (
+      typeof hasMedia === 'string' &&
+      !(hasMedia === 'true' || hasMedia === 'false')
+    ) {
+      return res.json({
+        status: 'error',
+        error: 'Invalid hasMedia value passed'
+      });
+    } else {
+      hasMedia = JSON.parse(hasMedia); // if only true/false
+    }
+  } else {
+    hasMedia = false; // otherwise just ignore it & set it to true
+  }
+
+  // replies = JSON.parse(replies);
+  // if (replies == null) replies = true;
+  if (replies != null) {
+    if (
+      typeof replies === 'string' &&
+      !(replies === 'true' || replies === 'false')
+    ) {
+      return res.json({
+        status: 'error',
+        error: 'Invalid replies value, throwing error'
+      });
+    } else {
+      replies = JSON.parse(replies); // if only true/false
+    }
+  } else {
+    replies = true; // otherwise just ignore it & set it to true
+  }
 
   if (!replies) {
-    // Parent = Item ID?
+    // Parent === null means ignore it
     parent = null;
   }
 
@@ -88,19 +137,18 @@ const getSearchItems = async (
   // console.log(unixTimeStamp);
   // console.log(itemLimit);
   // console.log(query);
-  console.log(following);
+  // console.log(following);
   // console.log(loggedInUser);
   // following can be true, false or null
   const itemOptions = { createdAt: { $lte: unixTimeStamp } };
-
-  // Milestone 3 Code
-  if (rank === 'time') {
-    // Sort By Time
-  } else if (rank === 'interest') {
-    // Sort by Likes + Retweets
-  } else {
-    console.log('Invalid rank value!');
-  }
+  console.log('Rank');
+  console.log(rank);
+  console.log('Parent');
+  console.log(parent);
+  console.log('Replies');
+  console.log(replies);
+  console.log('hasMedia');
+  console.log(hasMedia);
 
   // Milestone 2 Code
   if (query) itemOptions['$text'] = { $search: query };
@@ -119,8 +167,39 @@ const getSearchItems = async (
   }
   console.log(itemOptions);
   // if (username) itemOptions['username'] = username;
-  const items = await Item.find(itemOptions).limit(itemLimit);
-  return items;
+  if (parent != null) {
+    // parent & replies must be true to reach here
+    // include replies & retweets
+    try {
+      const item = await Item.findById(parent);
+      const retweetedRepliedIDs = item.retweets.concat(item.replies);
+      console.log(retweetedRepliedIDs);
+      itemOptions['_id'] = { $in: retweetedRepliedIDs };
+      // itemOptions['username'] = { $in: inUsername }
+    } catch {
+      console.log('Invalid item');
+    }
+  }
+
+  if (hasMedia) itemOptions['media'] = { $exists: true, $not: { $size: 0 } };
+
+  // Milestone 3 Code
+  if (rank === 'time') {
+    // sort from lowest to highest
+    const items = await Item.find(itemOptions)
+      .sort({ _id: -1 })
+      .limit(itemLimit);
+    return items;
+  } else {
+    console.log('IN HERE');
+    const items = await Item.find(itemOptions);
+    items.sort((a, b) => {
+      const AInterest = a.property.likes + a.retweeted;
+      const BInterest = b.property.likes + b.retweeted;
+      return BInterest > AInterest ? 1 : BInterest < AInterest ? -1 : 0;
+    });
+    return items.splice(0, itemLimit);
+  }
 };
 
 module.exports = router;
