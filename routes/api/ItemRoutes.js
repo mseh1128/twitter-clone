@@ -145,6 +145,7 @@ router.delete('/item/:id', invalidLogin404, async (req, res) => {
     if (userItems.some(item => item._id.toString() === id)) {
       const deletedItem = await Item.findOneAndDelete(id);
       const mediaIDArray = deletedItem.media;
+      console.log('IN HERE');
       // const repliesArray = deletedItem.replies;
       // const retweetsArray = deletedItem.retweets;
       // Currently not updated replies/retweets to indicate parent is now null

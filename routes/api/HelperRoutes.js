@@ -6,11 +6,13 @@ const router = express.Router();
 
 const User = require('../../models/User');
 const Item = require('../../models/Item').Item;
+const Media = require('../../models/Media');
 
 router.post('/reset', async (req, res) => {
   try {
     await Item.remove({});
     await User.remove({});
+    await Media.remove({});
     res.json({ status: 'OK' });
   } catch (err) {
     console.log(err);

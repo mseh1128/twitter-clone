@@ -119,7 +119,14 @@ app.get('/media/:id', (req, res) => {
       err: 'No file exists'
     });
   }
-  fileId = new mongoose.mongo.ObjectId(req.params.id);
+
+  if (!Media.exists({ _id: fileId })) {
+    console.log('The media file did not exist!');
+    return res.status(404).json({
+      err: 'The media file did not exist!'
+    });
+  }
+
   gfs.files.findOne({ _id: fileId }, (err, file) => {
     // Check if file
     if (!file || file.length === 0) {
