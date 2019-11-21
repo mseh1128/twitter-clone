@@ -137,6 +137,7 @@ router.post('/item/:id/like', invalidLogin, async (req, res) => {
 });
 
 router.delete('/item/:id', invalidLogin404, async (req, res) => {
+  console.log('IN DELETE');
   let id = req.params.id;
   try {
     const existingUser = await User.findById(req.session.userId);
@@ -155,18 +156,9 @@ router.delete('/item/:id', invalidLogin404, async (req, res) => {
         if (mediaID) {
           try {
             await Media.findByIdAndDelete(mediaID);
+            await gfs.remove({ _id: mediaID, root: 'uploads' });
           } catch (err) {
             console.log('Could not find media file');
-            return;
-          }
-          try {
-            gfs.remove({ _id: mediaID, root: 'uploads' }, (err, gridStore) => {
-              if (err) {
-                console.log('COULD NOT FIND THIS MEDIA ID');
-              }
-            });
-          } catch (err) {
-            console.log(err);
             console.log('In delete error callback');
             return;
           }

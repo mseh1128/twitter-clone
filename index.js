@@ -111,6 +111,7 @@ app.post('/addmedia', [invalidLogin, upload.single('content')], (req, res) => {
 // @route GET /image/:filename
 // @desc Display Image
 app.get('/media/:id', (req, res) => {
+  console.log('IN GET');
   let fileId;
   try {
     fileId = new mongoose.mongo.ObjectId(req.params.id);
@@ -126,6 +127,7 @@ app.get('/media/:id', (req, res) => {
       err: 'The media file did not exist!'
     });
   }
+  console.log('THE MEDIA FILE DOES EXIST');
 
   gfs.files.findOne({ _id: fileId }, (err, file) => {
     // Check if file
