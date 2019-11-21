@@ -34,15 +34,16 @@ router.post('/additem', invalidLogin, async (req, res) => {
   const { _id } = existingUser;
   // check that the user uploaded the media file!
   console.log(media);
-  const sanitizedMedia = await sanitizeMedia(media, _id);
-
-  const item = new Item({
-    username: existingUser.username,
-    content,
-    parent,
-    media: sanitizedMedia
-  });
   try {
+    const sanitizedMedia = await sanitizeMedia(media, _id);
+
+    const item = new Item({
+      username: existingUser.username,
+      content,
+      parent,
+      media: sanitizedMedia
+    });
+
     const newItem = await item.save();
     existingUser.items.push(newItem);
     await existingUser.save();
