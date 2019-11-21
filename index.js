@@ -93,7 +93,7 @@ const upload = multer({
 // @route POST /upload
 // @desc  Uploads file to DB
 app.post('/addmedia', [invalidLogin, upload.single('content')], (req, res) => {
-  console.log(req.file);
+  // console.log(req.file);
   const { userId } = req.session;
   if (!req.file) {
     res.json({ status: 'error', error: 'The file could not be uploaded' });
