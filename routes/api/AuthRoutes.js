@@ -8,9 +8,18 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 
 router.post('/adduser', async (req, res) => {
+  console.log('In add user');
   // console.log(req.body);
   const { username, password, email } = req.body;
   // username & email must be unique?
+  const duplicateUser = await User.exists({ username, email });
+  console.log(req.body);
+  if (duplicateUser) {
+    console.log('DUP USER DETECTED');
+    return res.json({ status: 'error', error: err });
+  }
+  console.log('Not a duplicate user');
+
   const user = new User({
     username,
     password,
