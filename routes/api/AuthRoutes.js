@@ -2,10 +2,8 @@ const express = require('express');
 const router = express.Router();
 const User = require('../../models/User');
 const Item = require('../../models/Item').Item;
-const auth = require('../../auth');
 const { itemToJSON, invalidLogin } = require('../../lib/utils');
 const nodemailer = require('nodemailer');
-const bcrypt = require('bcryptjs');
 
 router.post('/adduser', async (req, res) => {
   console.log('In add user');
@@ -16,7 +14,9 @@ router.post('/adduser', async (req, res) => {
   console.log(req.body);
   if (duplicateUser) {
     console.log('DUP USER DETECTED');
-    return res.status(404).json({ status: 'error', error: "Duplicate user detected!"});
+    return res
+      .status(404)
+      .json({ status: 'error', error: 'Duplicate user detected!' });
   }
   console.log('Not a duplicate user');
 
@@ -26,37 +26,40 @@ router.post('/adduser', async (req, res) => {
     email
   });
 
-  bcrypt.genSalt(10, (err, salt) => {
-    bcrypt.hash(user.password, salt, async (err, hash) => {
-      // Hash password
-      user.password = hash;
+  // bcrypt.genSalt(10, (err, salt) => {
+  //   bcrypt.hash(user.password, salt, async (err, hash) => {
+  // Hash password
+  // user.password = hash;
 
-      try {
-        const newUser = await user.save();
+  res.json({ status: 'OK' });
+  try {
+    // const newUser = await user.save();
 
-        res.json({ status: 'OK' });
-        // let testAccount = await nodemailer.createTestAccount();
-        let transporter = nodemailer.createTransport({
-          host: 'localhost',
-          port: 25,
-          tls: {
-            rejectUnauthorized: false
-          }
-        });
-
-        let info = await transporter.sendMail({
-          from: 'noreply@domain.com', // sender address
-          to: email, // list of receivers
-          subject: 'Key Info', // Subject line
-          text: 'validation key: <fakeEncryptedKey>', // plain text body
-          html: '<p>validation key: <fakeEncryptedKey></p>' // html body
-        });
-      } catch (err) {
-        console.log(err);
-        res.json({ status: 'error', error: err });
+    // let testAccount = await nodemailer.createTestAccount();
+    let transporter = nodemailer.createTransport({
+      host: 'localhost',
+      port: 25,
+      tls: {
+        rejectUnauthorized: false
       }
     });
-  });
+
+    await Promise.all([
+      user.save(),
+      transporter.sendMail({
+        from: 'noreply@domain.com', // sender address
+        to: email, // list of receivers
+        subject: 'Key Info', // Subject line
+        text: 'validation key: <fakeEncryptedKey>', // plain text body
+        html: '<p>validation key: <fakeEncryptedKey></p>' // html body
+      })
+    ]);
+  } catch (err) {
+    console.log(err);
+    res.json({ status: 'error', error: err });
+  }
+  //   });
+  // });
 });
 
 router.post('/verify', async (req, res) => {
@@ -66,13 +69,13 @@ router.post('/verify', async (req, res) => {
   // assume only 1 email
   const existingUser = await User.findOne({ email: email });
   if (!existingUser) {
-    console.log("User was not found in verify!");
+    console.log('User was not found in verify!');
     return res.status(404).json({ status: 'error', error: 'User not found' }); // ie data not found
   } // ie data not found
   if (key === 'abracadabra' || key === 'fakeEncryptedKey') {
     existingUser.verified = true;
   } else {
-    console.log("Key was incorrect in verify!");
+    console.log('Key was incorrect in verify!');
     return res.status(404).json({ status: 'error', error: 'Invalid key' });
   }
   await existingUser.save();
@@ -85,7 +88,8 @@ router.post('/login', async (req, res) => {
 
   try {
     //authenticate user
-    const user = await auth.authenticate(username, password);
+    // const user = await auth.authenticate(username, password);
+    const user = await User.exists({ username, password });
     // console.log(user);
     req.session.userId = user._id;
     res.json({ status: 'OK' });
