@@ -67,7 +67,7 @@ router.post('/verify', async (req, res) => {
   const { email, key } = req.body;
   // find user by email
   // assume only 1 email
-  const existingUser = await User.findOne({ email: email });
+  const existingUser = await User.findOne({ email: email }).select('verified');
   if (!existingUser) {
     console.log('User was not found in verify!');
     return res.status(404).json({ status: 'error', error: 'User not found' }); // ie data not found
@@ -89,7 +89,9 @@ router.post('/login', async (req, res) => {
   try {
     //authenticate user
     // const user = await auth.authenticate(username, password);
-    const user = await User.findOne({ username, password }).lean();
+    const user = await User.findOne({ username, password })
+      .lean()
+      .select('verified');
     if (!user) {
       return res.status(404).json({
         status: 'error',
