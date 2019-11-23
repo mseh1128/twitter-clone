@@ -36,5 +36,14 @@ UserSchema.index(
     }
   }
 );
+UserSchema.index(
+  { username: 1, password: 1 },
+  {
+    partialFilterExpression: {
+      username: { $exists: true },
+      password: { $exists: true }
+    }
+  }
+);
 const User = mongoose.model('User', UserSchema);
 module.exports = User;
