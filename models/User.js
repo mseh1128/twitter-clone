@@ -27,5 +27,14 @@ const UserSchema = new mongoose.Schema({
   following: [{ type: 'ObjectId' }]
 });
 
+UserSchema.index(
+  { username: 1, email: 1 },
+  {
+    partialFilterExpression: {
+      username: { $exists: true },
+      email: { $exists: true }
+    }
+  }
+);
 const User = mongoose.model('User', UserSchema);
 module.exports = User;

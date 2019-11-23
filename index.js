@@ -92,21 +92,25 @@ const upload = multer({
 
 // @route POST /upload
 // @desc  Uploads file to DB
-app.post('/addmedia', [invalidLogin, upload.single('content')], (req, res) => {
-  // console.log(req.file);
-  const { userId } = req.session;
-  if (!req.file) {
-    res.json({ status: 'error', error: 'The file could not be uploaded' });
-  } else {
-    res.json({ status: 'OK', id: req.file.id });
-    const media = new Media({
-      // Grab the file id that was stored in the database by the storage engine as the reference to your file
-      _id: req.file.id,
-      uploadedBy: userId
-    });
-    media.save();
+app.post(
+  '/addmedia',
+  [invalidLogin, upload.single('content')],
+  async (req, res) => {
+    // console.log(req.file);
+    const { userId } = req.session;
+    if (!req.file) {
+      res.json({ status: 'error', error: 'The file could not be uploaded' });
+    } else {
+      res.json({ status: 'OK', id: req.file.id });
+      const media = new Media({
+        // Grab the file id that was stored in the database by the storage engine as the reference to your file
+        _id: req.file.id,
+        uploadedBy: userId
+      });
+      await media.save();
+    }
   }
-});
+);
 
 // @route GET /image/:filename
 // @desc Display Image

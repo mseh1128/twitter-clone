@@ -56,7 +56,7 @@ router.post('/adduser', async (req, res) => {
     ]);
   } catch (err) {
     console.log(err);
-    res.json({ status: 'error', error: err });
+    // res.json({ status: 'error', error: err });
   }
   //   });
   // });
@@ -78,8 +78,8 @@ router.post('/verify', async (req, res) => {
     console.log('Key was incorrect in verify!');
     return res.status(404).json({ status: 'error', error: 'Invalid key' });
   }
-  await existingUser.save();
   res.json({ status: 'OK' });
+  await existingUser.save();
 });
 
 router.post('/login', async (req, res) => {
@@ -89,7 +89,19 @@ router.post('/login', async (req, res) => {
   try {
     //authenticate user
     // const user = await auth.authenticate(username, password);
-    const user = await User.exists({ username, password });
+    const user = await User.findOne({ username, password }).lean();
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        error: 'No user found!'
+      });
+    }
+    if (!user.verified) {
+      return res.status(404).json({
+        status: 'error',
+        error: 'User is not verified!'
+      });
+    }
     // console.log(user);
     req.session.userId = user._id;
     res.json({ status: 'OK' });
