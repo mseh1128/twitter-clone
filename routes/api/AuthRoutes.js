@@ -32,6 +32,7 @@ router.post('/adduser', async (req, res) => {
   // user.password = hash;
 
   res.json({ status: 'OK' });
+
   try {
     // const newUser = await user.save();
 
@@ -130,15 +131,26 @@ router.post('/follow', invalidLogin, async (req, res) => {
   let { username, follow } = req.body;
   // console.log(req.body);
   try {
-    const followingUser = await User.findOne({ username });
+    // const followingUser = await User.findOne({ username }).select('followers');
+    // const existingUser = await User.findById(req.session.userId).select(
+    //   'following'
+    // );
+    const [followingUser, existingUser] = await Promise.all([
+      User.findOne({ username }).select('followers'),
+      User.findById(req.session.userId).select('following')
+    ]);
+    // console.log(followingUser);
     if (!followingUser) {
-      res.json({
+      return res.json({
         status: 'error',
         error: 'The user you want to follow does not exist!'
       });
-      return;
     }
-    const existingUser = await User.findById(req.session.userId);
+
+    // const existingUser = await User.findById(req.session.userId).select(
+    //   'following'
+    // );
+
     // console.log(followingUser);
     if (followingUser.equals(existingUser)) {
       res.json({ status: 'error', error: 'You cannot follow yourself!' });
@@ -156,13 +168,15 @@ router.post('/follow', invalidLogin, async (req, res) => {
       // following someone again does nothing
       if (followingUserAlready) {
         // assume no error should be thrown, just return as is, w/out changing anything
-        res.json({ status: 'OK' });
-        return;
+        return res.json({ status: 'OK' });
       }
+      res.json({ status: 'OK' });
       existingUser.following.push(followingUser);
       followingUser.followers.push(existingUser);
-      await existingUser.save();
-      await followingUser.save();
+
+      await Promise.all([existingUser.save(), followingUser.save()]);
+      // await existingUser.save();
+      // await followingUser.save();
     } else {
       // unfollow user
       if (!followingUserAlready) {
@@ -171,13 +185,16 @@ router.post('/follow', invalidLogin, async (req, res) => {
         res.json({ status: 'OK' });
         return;
       }
+      res.json({ status: 'OK' });
       existingUser.following.pull(followingUser);
       followingUser.followers.pull(existingUser);
-      await existingUser.save();
-      await followingUser.save();
+      await Promise.all([existingUser.save(), followingUser.save()]);
+      // await existingUser.save();
+      // await followingUser.save();
     }
-    res.json({ status: 'OK' });
+    // res.json({ status: 'OK' });
   } catch (err) {
+    console.log(err);
     res.json({ status: 'error', error: err });
   }
 });
