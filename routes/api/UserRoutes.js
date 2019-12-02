@@ -6,9 +6,14 @@ const Item = require('../../models/Item').Item;
 router.get('/:username', async (req, res) => {
   const { username } = req.params;
   try {
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findOne({ username })
+      .lean()
+      .select('email followers following');
+
     if (!existingUser) {
-      return res.status(404).json({ status: 'error', error: 'That user does not exist!' });
+      return res
+        .status(404)
+        .json({ status: 'error', error: 'That user does not exist!' });
     }
     const { email, followers, following } = existingUser;
     res.json({
@@ -43,8 +48,11 @@ router.get('/:username/posts', async (req, res) => {
   let itemLimit = parseInt(limit) || 50;
   if (parseInt(limit) === 0) itemLimit = 0;
   console.log(`Item Limit: ${itemLimit}`);
+
   try {
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findOne({ username })
+      .lean()
+      .select('items');
     if (!existingUser) {
       res.json({ status: 'error', error: 'That user does not exist!' });
       return;
@@ -82,7 +90,9 @@ router.get('/:username/followers', async (req, res) => {
   if (parseInt(limit) === 0) itemLimit = 0; // if user asking for 0 items, don't give them anything?
   console.log(`Item Limit: ${itemLimit}`);
   try {
-    const existingUser = await User.findOne({ username }).populate('followers');
+    const existingUser = await User.findOne({ username })
+      .populate('followers', 'username')
+      .lean();
     if (!existingUser) {
       res.json({
         status: 'error',
@@ -130,7 +140,9 @@ router.get('/:username/following', async (req, res) => {
   if (parseInt(limit) === 0) itemLimit = 0; // if user asking for 0 items, don't give them anything?
   console.log(`Item Limit: ${itemLimit}`);
   try {
-    const existingUser = await User.findOne({ username }).populate('following');
+    const existingUser = await User.findOne({ username })
+      .populate('following', 'username')
+      .lean();
     if (!existingUser) {
       res.json({
         status: 'error',

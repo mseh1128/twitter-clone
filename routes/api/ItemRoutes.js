@@ -105,8 +105,6 @@ router.post('/item/:id/like', invalidLogin, async (req, res) => {
   const { id } = req.params;
   let { like } = req.body;
   try {
-    const item = await Item.findById(id);
-    // const existingUser = await User.findById(req.session.userId);
     if (like != null) {
       if (typeof like === 'string' && !(like === 'true' || like === 'false')) {
         console.log('Invalid string passed');
@@ -117,8 +115,10 @@ router.post('/item/:id/like', invalidLogin, async (req, res) => {
     } else {
       like = true; // otherwise just ignore it & set it to true
     }
-
     const { userId } = req.session;
+    const item = await Item.findById(id).select('likedUsers property');
+    // const existingUser = await User.findById(req.session.userId);
+
     // const existingUser = await User.findById(userId);
     // console.log(existingUser.likedItems);
     // const userAlreadyLiked = existingUser.likedItems.includes(id);
@@ -152,7 +152,6 @@ router.post('/item/:id/like', invalidLogin, async (req, res) => {
       res.json({ status: 'OK' });
     }
   } catch (err) {
-    console.log(err);
     res.json({ status: 'error' });
   }
 });
