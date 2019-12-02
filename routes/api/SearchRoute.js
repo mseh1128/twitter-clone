@@ -98,9 +98,10 @@ router.post('/search', async (req, res) => {
   }
 
   try {
-    const existingUser = await User.findById(req.session.userId).populate(
-      'following'
-    );
+    const existingUser = await User.findById(req.session.userId)
+      .populate('following')
+      .select('following')
+      .lean();
     const items = await getSearchItems(
       unixTimeStamp,
       itemLimit,
