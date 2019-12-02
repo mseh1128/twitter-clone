@@ -96,18 +96,24 @@ app.post(
   '/addmedia',
   [invalidLogin, upload.single('content')],
   async (req, res) => {
-    // console.log(req.file);
+    console.log(req.file);
     const { userId } = req.session;
     if (!req.file) {
       res.json({ status: 'error', error: 'The file could not be uploaded' });
+      // console.log('The file could not be uploaaded');
     } else {
       res.json({ status: 'OK', id: req.file.id });
-      const media = new Media({
-        // Grab the file id that was stored in the database by the storage engine as the reference to your file
-        _id: req.file.id,
-        uploadedBy: userId
-      });
-      await media.save();
+      // console.log('The file was uploaded successfully');
+      try {
+        const media = new Media({
+          // Grab the file id that was stored in the database by the storage engine as the reference to your file
+          _id: req.file.id,
+          uploadedBy: userId
+        });
+        await media.save();
+      } catch (err) {
+        res.json({ status: 'error', error: 'The media could not be saved!' });
+      }
     }
   }
 );
