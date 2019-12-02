@@ -41,8 +41,11 @@
       </div>
       <div>
         <p>Add Item</p>
-        Content: <input type="text" name="content" id="content" /><br />
+        Content:
+        <input type="text" name="addItemContent" id="addItemContent" /><br />
         childType: <input type="text" name="childType" id="childType" /><br />
+        Parent ID: <input type="text" name="parent" id="parent" /><br />
+        Media IDs (Array): <input type="text" name="media" id="media" /><br />
         <input type="submit" value="Submit" id="addItemSubmit" /><br /><br />
         <div id="addItemResult"></div>
       </div>
@@ -72,6 +75,23 @@
           id="followingQuery"
           checked
         />Following<br />
+
+        Rank:
+        <input type="text" name="rankQuery" id="rankQuery" /><br />
+
+        Parent:
+        <input type="text" name="parentQuery" id="parentQuery" /><br />
+
+        <input
+          type="checkbox"
+          value="repliesQuery"
+          id="repliesQuery"
+          checked
+        />Replies<br />
+
+        <input type="checkbox" value="hasMediaQuery" id="hasMediaQuery" />Has
+        Media<br />
+
         <input type="submit" value="Submit" id="searchSubmit" /><br /><br />
         <div id="searchItems"></div>
       </div>
@@ -141,6 +161,49 @@
         <input type="submit" value="Submit" id="followUserSubmit" /><br /><br />
         <div id="followUserInfo"></div>
       </div>
+
+      <div>
+        <p>Like A Item</p>
+        ID Of Item To Like:
+        <input type="text" name="itemToLike" id="itemToLike" /><br />
+        <input
+          type="checkbox"
+          value="likeOrUnlikeCheckbox"
+          id="likeOrUnlikeCheckbox"
+          checked
+        />Like Item (Checked = Like, Unchecked = Unlike)<br />
+        <input type="submit" value="Submit" id="likeItemSubmit" /><br /><br />
+        <div id="likeItemInfo"></div>
+      </div>
+
+      <div>
+        <p>Add Media</p>
+        <form
+          method="POST"
+          enctype="multipart/form-data"
+          id="contentUploadForm"
+        >
+          <div>
+            <input
+              type="file"
+              name="content"
+              id="content"
+              class="custom-content-input"
+            />
+          </div>
+          <input type="submit" value="Submit" id="addMediaSubmit" />
+          <div id="addMediaInfo"></div>
+        </form>
+      </div>
+
+      <div>
+        <p>Get Media</p>
+        Media ID:
+        <input type="text" name="mediaID" id="mediaID" /><br />
+        <input type="submit" value="Submit" id="getMediaSubmit" /><br /><br />
+        <img id="mediaImage"></img>
+      </div>
+
       <div>
         <p>Logout</p>
         <input type="submit" value="Submit" id="logoutSubmit" />

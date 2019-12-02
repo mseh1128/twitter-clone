@@ -61,6 +61,35 @@ $(async function() {
     else $('#userFollowingInfo').text(JSON.stringify(data.users));
   });
 
+  $('#getMediaSubmit').click(async () => {
+    const data = await $.ajax({
+      type: 'GET',
+      url: `/media/${$('#mediaID').val()}`,
+      cache: false,
+      xhr: function() {
+        // Seems like the only way to get access to the xhr object
+        var xhr = new XMLHttpRequest();
+        xhr.responseType = 'blob';
+        return xhr;
+      },
+      success: function(data) {
+        console.log('Successful in presenting media!!');
+        var img = document.getElementById('mediaImage');
+        var url = window.URL || window.webkitURL;
+        img.src = url.createObjectURL(data);
+      },
+      error: () => {
+        console.log('An error has occurred!');
+      }
+    });
+    // console.log(data);
+    // if (data.status === 'error')
+    //   $('#getMediaInfo').text(
+    //     'An error occurred in getting that media! Does it exist?'
+    //   );
+    // else $('#getMediaInfo').text(data);
+  });
+
   // FOLLOWING
   $('#followUserSubmit').click(async () => {
     const isChecked = $('#followOrUnfollow').is(':checked');
@@ -84,6 +113,30 @@ $(async function() {
         $('#followUserInfo').text(
           `${$('#userToFollow').val()} was unfollowed!`
         );
+      }
+    }
+  });
+
+  // FOLLOWING
+  $('#likeItemSubmit').click(async () => {
+    const isChecked = $('#likeOrUnlikeCheckbox').is(':checked');
+    const data = await $.ajax({
+      type: 'POST',
+      dataType: 'Json',
+      traditional: true,
+      data: {
+        like: isChecked
+      },
+      url: `/item/${$('#itemToLike').val()}/like`
+    });
+    console.log(data);
+    if (data.status === 'error') {
+      $('#likeItemInfo').text(data.error);
+    } else {
+      if (isChecked) {
+        $('#likeItemInfo').text('The post was liked!');
+      } else {
+        $('#likeItemInfo').text('The post was unliked!');
       }
     }
   });
@@ -127,6 +180,47 @@ $(async function() {
     else $('#registerResult').text('Signed Up (User Added) successfully!');
   });
 
+  $('#addMediaSubmit').click(async () => {
+    event.preventDefault();
+    console.log('IN HERE');
+    const form = $('#contentUploadForm')[0];
+    const data = new FormData(form);
+    console.log('FORM DATA');
+    console.log(data);
+
+    $('#addMediaSubmit').prop('disabled', true);
+
+    $.ajax({
+      type: 'POST',
+      enctype: 'multipart/form-data',
+      url: '/addmedia',
+      data: data,
+      processData: false,
+      contentType: false,
+      cache: false,
+      timeout: 600000,
+      success: function(data) {
+        console.log(data);
+        if (data.status === 'error') {
+          $('#addMediaInfo').text(
+            'There was an error in add media! Are you logged in? Are you submitting the proper file type?'
+          );
+        } else {
+          $('#addMediaInfo').text(
+            `Add media was successfull with id ${data.id}!`
+          );
+        }
+        $('#addMediaSubmit').prop('disabled', false);
+      },
+      error: function(e) {
+        console.log('Somehow in error function!');
+        $('#addMediaInfo').text('Error occurred, something went wrong!');
+        console.log('ERROR : ', e);
+        $('#addMediaSubmit').prop('disabled', false);
+      }
+    });
+  });
+
   $('#validationSubmit').click(async () => {
     const data = await $.ajax({
       type: 'POST',
@@ -149,9 +243,14 @@ $(async function() {
       type: 'POST',
       dataType: 'Json',
       traditional: true,
+
       data: {
-        content: $('#content').val(),
-        childType: $('#childType').val()
+        content: $('#addItemContent').val(),
+        childType: $('#childType').val(),
+        parent: $('#parent').val(),
+        media: $('#media')
+          .val()
+          .split(',')
       },
       url: '/additem'
     });
@@ -183,17 +282,23 @@ $(async function() {
     const q = $('#searchQuery').val();
     const username = $('#usernameQuery').val();
     const following = $('#followingQuery').is(':checked');
-    console.log(`timestamp: ${!timestamp}`);
-    console.log(`Limit: ${!limit}`);
-    console.log(`q: ${!q}`);
-    console.log(`username: ${!username}`);
-    console.log(`following: ${following}`);
+
+    const rank = $('#rankQuery').val();
+    const parent = $('#parentQuery').val();
+    const replies = $('#repliesQuery').is(':checked');
+    const hasMedia = $('#hasMediaQuery').is(':checked');
+
     const postData = {
       ...(timestamp && { timestamp }),
       ...(limit && { limit }),
       ...(q && { q }),
       ...(username && { username }),
-      ...{ following }
+      ...{ following },
+
+      ...(rank && { rank }),
+      ...(parent && { parent }),
+      ...{ replies },
+      ...{ hasMedia }
     };
     const data = await $.ajax({
       type: 'POST',

@@ -34,8 +34,15 @@ const getExistingData = (parent, userID) =>
   });
 
 router.post('/additem', invalidLogin, async (req, res) => {
-  const { content, childType, media } = req.body;
-  let { parent } = req.body;
+  const { content, childType } = req.body;
+  let { parent, media } = req.body;
+  if (!media) media = null;
+  if (!parent) parent = null;
+  console.log('media is: ');
+  console.log(media);
+  console.log('parent is: ');
+  console.log(parent);
+
   const childIsRetweet = childType === 'retweet';
   const childIsReply = childType === 'reply';
   if (childType && !childIsRetweet && !childIsReply) {
