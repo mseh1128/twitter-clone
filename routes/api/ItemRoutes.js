@@ -6,11 +6,32 @@ const {
   itemToJSON,
   invalidLogin,
   invalidLogin404,
-  sanitizeMedia
+  checkMedia
 } = require('../../lib/utils');
 const User = require('../../models/User');
 const Item = require('../../models/Item').Item;
 const Media = require('../../models/Media');
+
+const getExistingData = (parent, userID) =>
+  new Promise(async (resolve, reject) => {
+    let parentItem;
+    let existingUser;
+    if (parent) {
+      try {
+        const [parentItem, existingUser] = await Promise.all([
+          Item.findById(parent).select('retweeted replies retweets'),
+          User.findById(userID).select('username items')
+        ]);
+        resolve({ parentItem, existingUser });
+      } catch (err) {
+        console.log('Parent doesnt exist');
+        reject('Parent doesnt exist');
+      }
+    } else {
+      existingUser = await User.findById(userID);
+      resolve({ parentItem, existingUser });
+    }
+  });
 
 router.post('/additem', invalidLogin, async (req, res) => {
   const { content, childType, media } = req.body;
@@ -20,36 +41,33 @@ router.post('/additem', invalidLogin, async (req, res) => {
   if (childType && !childIsRetweet && !childIsReply) {
     res.json({ status: 'error', error: 'Invalid child type' });
   }
-  let parentItem;
-  if (parent) {
-    try {
-      parentItem = await Item.findById(parent);
-    } catch (err) {
-      console.log('Parent doesnt exist');
-      parent = null;
-    }
-  }
-
-  const existingUser = await User.findById(req.session.userId);
-  const { _id } = existingUser;
-  // check that the user uploaded the media file!
-  console.log(media);
   try {
+    const { parentItem, existingUser } = await getExistingData(
+      parent,
+      req.session.userId
+    );
+
+    const { _id } = existingUser;
+    // check that the user uploaded the media file!
+    // console.log(media);
+
     // console.log('REQUEST BODY IS: ');
     // console.log(req.body);
-    const sanitizedMedia = await sanitizeMedia(media, _id, req.body);
+    // checkMedia will throw error if could not clean media!
+    await checkMedia(media, _id, req.body);
 
     const item = new Item({
       username: existingUser.username,
       content,
       parent,
       childType,
-      media: sanitizedMedia
+      media: media
     });
 
     const newItem = await item.save();
+    res.json({ status: 'OK', id: newItem.id });
     existingUser.items.push(newItem);
-    await existingUser.save();
+
     if (parentItem && childType) {
       // if child exists must be retweet or reply
       if (childIsRetweet) {
@@ -59,10 +77,11 @@ router.post('/additem', invalidLogin, async (req, res) => {
         // if reply
         parentItem.replies.push({ _id: newItem._id });
       }
-      await parentItem.save();
+      Promise.all([parentItem.save(), existingUser.save()]);
+    } else {
+      existingUser.save();
     }
     // console.log(newItem);
-    res.json({ status: 'OK', id: newItem.id });
   } catch (err) {
     res.json({ status: 'error', error: err });
   }
