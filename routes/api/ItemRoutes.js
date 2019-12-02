@@ -161,12 +161,15 @@ router.delete('/item/:id', invalidLogin404, async (req, res) => {
   console.log('IN DELETE');
   let id = req.params.id;
   try {
-    const existingUser = await User.findById(req.session.userId);
-    const userItems = existingUser.items;
     const { gfs } = res.locals;
+    // const existingUser = await ;
+    // const itemToDelete = await ;
+    const [existingUser, itemToDelete] = await Promise.all([
+      User.findById(req.session.userId).select('items username'),
+      Item.findById(id)
+    ]);
     // if (userItems.some(item => item._id.toString() === id)) {
     // const deletedItem = await Item.findOneAndDelete(id);
-    const itemToDelete = await Item.findById(id);
     if (!itemToDelete || itemToDelete == null || itemToDelete == undefined) {
       console.log('Deleted item did not exist');
       return res.status(404).send('Deleted item does not exist');
@@ -177,27 +180,25 @@ router.delete('/item/:id', invalidLogin404, async (req, res) => {
     }
     console.log('Item exists, the user has the item');
     const mediaIDArray = itemToDelete.media;
-    console.log('Media ID Array is: ');
     // const repliesArray = itemToDelete.replies;
     // const retweetsArray = itemToDelete.retweets;
     // Currently not updated replies/retweets to indicate parent is now null
-    console.log(mediaIDArray);
 
     if (mediaIDArray && mediaIDArray.length > 0) {
-      mediaIDArray.forEach(async mediaID => {
-        console.log('Inside media array id');
-        if (mediaID) {
-          console.log('media array exists');
-          try {
-            console.log('deleting media');
-            await Media.findByIdAndDelete(mediaID);
-            await gfs.remove({ _id: mediaID, root: 'uploads' });
-          } catch (err) {
-            console.log('In delete error callback, something went wrong');
-            return;
-          }
-        }
-      });
+      const promiseList = mediaIDArray.reduce((acc, mediaID) => {
+        return acc.concat([
+          Media.findByIdAndDelete(mediaID),
+          gfs.remove({ _id: mediaID, root: 'uploads' })
+        ]);
+      }, []);
+      Promise.all(
+        mediaIDArray.reduce((acc, mediaID) => {
+          return acc.concat([
+            Media.findByIdAndDelete(mediaID),
+            gfs.remove({ _id: mediaID, root: 'uploads' })
+          ]);
+        }, [])
+      );
     }
 
     // repliesArray.forEach(async replyID => {
@@ -220,12 +221,12 @@ router.delete('/item/:id', invalidLogin404, async (req, res) => {
     //     }
     //   }
     // });
-    await itemToDelete.remove();
-    existingUser.items.pull(id);
-    await existingUser.save();
-    await itemToDelete.save();
-    console.log('User had the item');
     res.status(200).send('Item deleted!');
+
+    existingUser.items.pull(id);
+    await Promise.all([itemToDelete.remove(), existingUser.save()]);
+    // await itemToDelete.save();
+    console.log('User had the item');
     // } else {
     //   console.log('User does not have the item!');
     //   res.status(404).send('User logged in does not have this item!');
