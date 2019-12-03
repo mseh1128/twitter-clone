@@ -1,4 +1,5 @@
 const express = require('express');
+const redis = require('redis');
 const session = require('express-session');
 const path = require('path');
 const app = express();
@@ -23,13 +24,32 @@ app.use(express.static(__dirname + '/public'));
 
 app.use(express.json());
 app.use(cookieParser());
+// app.use(
+//   session({
+//     name: 'sid',
+//     secret: config.JWT_SECRET,
+//     cookie: {
+//       maxAge: 1000 * 60 * 60 * 2 // 2 hours
+//     }
+//   })
+// );
+let RedisStore = require('connect-redis')(session);
+let redisClient = redis.createClient();
+
+redisClient.on('connect', function() {
+  console.log('Connected to Redis...');
+});
+
+redisClient.on('error', err => {
+  console.log('Redis error: ', err);
+});
+
 app.use(
   session({
-    name: 'sid',
+    store: new RedisStore({ client: redisClient }),
     secret: config.JWT_SECRET,
-    cookie: {
-      maxAge: 1000 * 60 * 60 * 2 // 2 hours
-    }
+    name: 'sid',
+    resave: false
   })
 );
 // bottom for form submissions
