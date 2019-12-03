@@ -34,7 +34,7 @@ app.use(cookieParser());
 //   })
 // );
 let RedisStore = require('connect-redis')(session);
-let redisClient = redis.createClient();
+let redisClient = redis.createClient({host: '192.168.122.67',port:'6379'});
 
 redisClient.on('connect', function() {
   console.log('Connected to Redis...');
@@ -46,7 +46,7 @@ redisClient.on('error', err => {
 
 app.use(
   session({
-    store: new RedisStore({ client: redisClient }),
+    store: new RedisStore({ host: '192.168.122.67', port: 6379, client: redisClient, ttl: 86400 }),
     secret: config.JWT_SECRET,
     name: 'sid',
     resave: false
