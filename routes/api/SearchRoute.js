@@ -182,7 +182,7 @@ const getSearchItems = async (
       console.log(retweetedRepliedIDs);
       itemOptions['_id'] = { $in: retweetedRepliedIDs };
       // itemOptions['username'] = { $in: inUsername }
-    } catch {
+    } catch (err) {
       console.log('Invalid item');
     }
   }
