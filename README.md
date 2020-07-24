@@ -13,7 +13,7 @@ In order to meet stringent QoS requirements (1K concurrent useres w/ a 95th perc
 
 ## Installation/Usage
 
-Add your MONGODB_URI to the "config.js" file.
+Clone down this repository and add your MONGODB_URI to the "config.js" file. You will need node and npm installed globally on your machine.
 
 ```bash
 # Install dependencies
